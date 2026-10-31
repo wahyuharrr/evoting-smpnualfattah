@@ -1,73 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  onSnapshot,
-  getDoc,
-  getDocs,
-  increment,
-  writeBatch,
-} from 'firebase/firestore';
-import {
-  Users,
-  User,
-  LogIn,
-  Settings,
-  BarChart2,
-  PlusCircle,
-  Trash2,
-  LogOut,
-  CheckCircle2,
-  ShieldAlert,
-  Home,
-  AlertCircle,
-  X,
-} from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { initializeApp } from "firebase/app";
+import { 
+  getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, increment, writeBatch 
+} from "firebase/firestore";
+import { 
+  Users, User, LogIn, Settings, BarChart2, PlusCircle, Trash2, LogOut, CheckCircle2, ShieldAlert, AlertCircle, RefreshCw, Upload
+} from "lucide-react";
 
-// --- 1. Firebase Initialization ---
-// Menggunakan konfigurasi Firebase milik pengguna
+// === FIREBASE CONFIGURATION ===
+// Pastikan config ini sesuai dengan milik Anda
 const firebaseConfig = {
-  apiKey: 'AIzaSyBJ4hJwAarGKPhnooZa4Jxw9JDVOsuZRFI',
-  authDomain: 'evoting-smpnualfattah.firebaseapp.com',
-  projectId: 'evoting-smpnualfattah',
-  storageBucket: 'evoting-smpnualfattah.firebasestorage.app',
-  messagingSenderId: '488695687383',
-  appId: '1:488695687383:web:8fad2ab21da5dc192ea892',
-  measurementId: 'G-F80LDNETDP',
+  apiKey: "AIzaSyBJ4hJwAarGKPhnooZa4Jxw9JDVOsuZRFI",
+  authDomain: "evoting-smpnualfattah.firebaseapp.com",
+  projectId: "evoting-smpnualfattah",
+  storageBucket: "evoting-smpnualfattah.firebasestorage.app",
+  messagingSenderId: "488695687383",
+  appId: "1:488695687383:web:8fad2ab21da5dc192ea892",
+  measurementId: "G-F80LDNETDP"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- Reusable UI Components ---
-
+// === COMPONENTS ===
 const Modal = ({ isOpen, onClose, title, children, actions }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-        <div className="p-4 border-b flex justify-between items-center bg-emerald-50">
-          <h3 className="font-bold text-emerald-800 flex items-center gap-2">
-            {title}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-800 transition-colors"
-          >
-            <X size={20} />
-          </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">{title}</h3>
+          <div className="text-gray-600 mb-6">{children}</div>
+          <div className="flex justify-end gap-3">{actions}</div>
         </div>
-        <div className="p-6">{children}</div>
-        {actions && (
-          <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
-            {actions}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -79,1289 +44,667 @@ const Toast = ({ message, type, onClose }) => {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const bgColor =
-    type === 'error'
-      ? 'bg-red-500'
-      : type === 'success'
-      ? 'bg-emerald-500'
-      : 'bg-blue-500';
+  const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+  const Icon = type === 'success' ? CheckCircle2 : AlertCircle;
 
   return (
-    <div
-      className={`fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full text-white shadow-lg flex items-center gap-2 z-50 animate-in slide-in-from-top-4 ${bgColor}`}
-    >
-      {type === 'error' ? (
-        <AlertCircle size={20} />
-      ) : (
-        <CheckCircle2 size={20} />
-      )}
-      <span className="font-medium text-sm sm:text-base whitespace-nowrap">
-        {message}
-      </span>
+    <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full text-white shadow-lg animate-in slide-in-from-top-10 fade-in ${bgColor}`}>
+      <Icon size={20} />
+      <span className="font-medium">{message}</span>
     </div>
   );
 };
 
-const Card = ({ children, className = '' }) => (
-  <div
-    className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden ${className}`}
-  >
-    {children}
-  </div>
-);
+const LogoHeader = ({ size = 'large' }) => {
+  const containerClass = size === 'large' ? 'mb-8' : 'mb-6';
+  const mainLogoClass = size === 'large' ? 'h-32 mb-4' : 'h-20 mb-3';
+  const orgLogoClass = size === 'large' ? 'h-16' : 'h-10';
 
-// --- Main Application Component ---
+  return (
+    <div className={`flex flex-col items-center justify-center ${containerClass}`}>
+      <img src="https://lh3.googleusercontent.com/d/1VcoKqHq9JtcX2HQ30yhBgku8Zn5VRZFL=w1000" alt="SMP NU Al Fattah" className={mainLogoClass} referrerPolicy="no-referrer" />
+      <div className="flex justify-center items-center gap-6">
+        <img src="https://lh3.googleusercontent.com/d/1iAZFiX1Os0dY9lPzMbEztcEFSDvXCpsd=w500" alt="OSIS" className={orgLogoClass} referrerPolicy="no-referrer" />
+        <img src="https://lh3.googleusercontent.com/d/1vjZQlTHqwrnadx-1CJ4lbGzO3CdR0U2E=w500" alt="IPNU" className={orgLogoClass} referrerPolicy="no-referrer" />
+        <img src="https://lh3.googleusercontent.com/d/1HeuwQDNo6G2xwrwzRoP6pHnf1m_j5pne=w500" alt="IPPNU" className={orgLogoClass} referrerPolicy="no-referrer" />
+      </div>
+    </div>
+  );
+};
 
 export default function EVotingApp() {
-  const [toast, setToast] = useState(null);
-  const showToast = (message, type = 'info') => setToast({ message, type });
-
-  // Navigation State
-  const [currentView, setCurrentView] = useState('home'); // home, voting, admin-login, admin-dashboard
-
-  // Data State
-  const [voterSession, setVoterSession] = useState(null); // { id, role, gender }
-  const [settings, setSettings] = useState(null);
+  const [session, setSession] = useState(null); 
+  const [voterData, setVoterData] = useState(null);
   const [candidates, setCandidates] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [settings, setSettings] = useState({ period: "..... - ....." });
+  const [toast, setToast] = useState(null);
+  
+  const showToast = (message, type = 'success') => setToast({ message, type });
 
-  // --- Seed Initial Data if Database is Empty ---
-  const seedDatabaseIfEmpty = async () => {
+  const seedInitialData = async () => {
     try {
-      const settingsDoc = await getDoc(doc(db, 'settings', 'main'));
-      if (!settingsDoc.exists()) {
-        console.log('Database kosong. Melakukan inisialisasi awal...');
-
-        // 1. Set Settings
-        await setDoc(doc(db, 'settings', 'main'), {
-          startYear: '2024',
-          endYear: '2025',
-        });
-
-        // 2. Set Default Candidates
-        const defaultCandidates = [
-          {
-            category: 'OSIS',
-            name: 'Paslon 1 OSIS',
-            vision: 'Visi Paslon 1',
-            mission: 'Misi Paslon 1',
-            votes: 0,
-            photoUrl: '',
-          },
-          {
-            category: 'OSIS',
-            name: 'Paslon 2 OSIS',
-            vision: 'Visi Paslon 2',
-            mission: 'Misi Paslon 2',
-            votes: 0,
-            photoUrl: '',
-          },
-          {
-            category: 'IPNU',
-            name: 'Kandidat IPNU 1',
-            vision: 'Visi IPNU',
-            mission: 'Misi IPNU',
-            votes: 0,
-            photoUrl: '',
-          },
-          {
-            category: 'IPPNU',
-            name: 'Kandidat IPPNU 1',
-            vision: 'Visi IPPNU',
-            mission: 'Misi IPPNU',
-            votes: 0,
-            photoUrl: '',
-          },
-        ];
-
-        for (const cand of defaultCandidates) {
-          await setDoc(doc(collection(db, 'candidates')), {
-            ...cand,
-            createdAt: new Date().toISOString(),
-          });
-        }
-        console.log('Inisialisasi selesai!');
+      const snap = await getDoc(doc(db, "settings", "global"));
+      if (!snap.exists()) {
+        await setDoc(doc(db, "settings", "global"), { period: "2024 - 2025" });
       }
-    } catch (err) {
-      console.error('Gagal melakukan seed data:', err);
+    } catch (e) {
+      console.log("Auto-seed error:", e);
     }
   };
 
-  // --- Firebase Listeners ---
   useEffect(() => {
-    let unsubSettings, unsubCandidates;
-    let isMounted = true;
+    seedInitialData();
 
-    const initialize = async () => {
-      await seedDatabaseIfEmpty();
+    const unsubSettings = onSnapshot(doc(db, "settings", "global"), (doc) => {
+      if (doc.exists()) setSettings(doc.data());
+    });
 
-      // Listen to Settings
-      unsubSettings = onSnapshot(
-        doc(db, 'settings', 'main'),
-        (docSnap) => {
-          if (docSnap.exists() && isMounted) {
-            setSettings(docSnap.data());
-          }
-        },
-        (error) => console.error('Settings listen error:', error)
-      );
-
-      // Listen to Candidates
-      unsubCandidates = onSnapshot(
-        collection(db, 'candidates'),
-        (snapshot) => {
-          if (!isMounted) return;
-          const cands = [];
-          snapshot.forEach((doc) => {
-            cands.push({ id: doc.id, ...doc.data() });
-          });
-          setCandidates(cands);
-          setIsLoading(false); // Only remove loading screen after candidates are loaded
-        },
-        (error) => console.error('Candidates listen error:', error)
-      );
-    };
-
-    initialize();
+    const unsubCandidates = onSnapshot(collection(db, "candidates"), (snapshot) => {
+      const cands = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setCandidates(cands);
+    });
 
     return () => {
-      isMounted = false;
-      if (unsubSettings) unsubSettings();
-      if (unsubCandidates) unsubCandidates();
+      unsubSettings();
+      unsubCandidates();
     };
   }, []);
 
-  if (isLoading || !settings) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-emerald-600 bg-gray-50 space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-        <div className="flex items-center gap-2 font-medium">
-          <span>Menghubungkan ke Database...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans selection:bg-emerald-200">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+    <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      
+      {!session && (
+        <LoginView onLogin={(v) => { setVoterData(v); setSession('voter'); }} onGoAdmin={() => setSession('admin')} settings={settings} showToast={showToast} />
       )}
 
-      {currentView === 'home' && (
-        <HomeView
-          onLogin={(session) => {
-            setVoterSession(session);
-            setCurrentView('voting');
-          }}
-          onGoAdmin={() => setCurrentView('admin-login')}
-          settings={settings}
-          showToast={showToast}
-        />
+      {session === 'voter' && (
+        <VotingView voter={voterData} candidates={candidates} onVoteComplete={() => { setSession(null); setVoterData(null); }} onCancel={() => { setSession(null); setVoterData(null); }} showToast={showToast} />
       )}
 
-      {currentView === 'voting' && voterSession && (
-        <VotingView
-          voter={voterSession}
-          candidates={candidates}
-          onVoteComplete={() => {
-            setVoterSession(null);
-            setCurrentView('home');
-          }}
-          onCancel={() => {
-            setVoterSession(null);
-            setCurrentView('home');
-          }}
-          showToast={showToast}
-        />
+      {session === 'admin' && (
+        <AdminView settings={settings} candidates={candidates} onLogout={() => setSession(null)} showToast={showToast} />
       )}
-
-      {currentView === 'admin-login' && (
-        <AdminLoginView
-          onSuccess={() => setCurrentView('admin-dashboard')}
-          onCancel={() => setCurrentView('home')}
-          showToast={showToast}
-        />
-      )}
-
-      {currentView === 'admin-dashboard' && (
-        <AdminDashboard
-          settings={settings}
-          candidates={candidates}
-          onLogout={() => setCurrentView('home')}
-          showToast={showToast}
-        />
-      )}
-    </div>
+    </>
   );
 }
 
-// ==========================================
-// VIEWS
-// ==========================================
+// === LOGIN VIEW ===
+function LoginView({ onLogin, onGoAdmin, settings, showToast }) {
+  const [voterId, setVoterId] = useState("");
+  const [role, setRole] = useState("siswa");
+  const [gender, setGender] = useState("L");
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
+  const [adminPass, setAdminPass] = useState("");
 
-// --- 1. Home View (Voter Login) ---
-function HomeView({ onLogin, onGoAdmin, settings, showToast }) {
-  const [voterId, setVoterId] = useState('');
-  const [role, setRole] = useState('Siswa');
-  const [gender, setGender] = useState('Laki-laki');
-  const [isChecking, setIsChecking] = useState(false);
-
-  const handleLogin = async (e) => {
+  const handleVoterLogin = async (e) => {
     e.preventDefault();
-    if (!voterId.trim()) {
-      showToast('Masukkan ID Pemilih terlebih dahulu.', 'error');
-      return;
-    }
-
-    setIsChecking(true);
+    if (!voterId.trim()) return showToast("ID Pemilih wajib diisi!", "error");
+    
     try {
-      // Check if user has already voted by checking the votedIds collection
-      const voterDocRef = doc(db, 'votedIds', voterId.trim());
-      const voterSnap = await getDoc(voterDocRef);
-
-      if (voterSnap.exists()) {
-        showToast('Maaf, ID Pemilih ini sudah digunakan.', 'error');
-        setIsChecking(false);
+      const voterDoc = await getDoc(doc(db, "voters", voterId.trim()));
+      if (voterDoc.exists()) {
+        showToast("ID ini sudah digunakan untuk memilih!", "error");
         return;
       }
-
-      onLogin({ id: voterId.trim(), role, gender });
+      
+      onLogin({
+        id: voterId.trim(),
+        role: role,
+        gender: gender,
+        weight: role === 'siswa' ? 1 : 3
+      });
     } catch (err) {
-      console.error(err);
-      showToast('Gagal memverifikasi ID. Periksa koneksi internet.', 'error');
+      showToast("Gagal memeriksa ID", "error");
     }
-    setIsChecking(false);
+  };
+
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminPass === "alfattahvote") {
+      onGoAdmin();
+    } else {
+      showToast("Password admin salah!", "error");
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto pt-12 p-6 flex flex-col items-center">
-      {/* Logos Section - Exact Requirements */}
-      <div className="flex flex-col items-center gap-6 mb-8 w-full">
-        {/* Top Row: Main Logo SMP NU */}
-        <div className="flex justify-center">
-          <img
-            src="https://lh3.googleusercontent.com/d/1VcoKqHq9JtcX2HQ30yhBgku8Zn5VRZFL=w1000"
-            alt="Logo SMP NU Al Fattah"
-            referrerPolicy="no-referrer"
-            className="h-32 sm:h-40 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
-          />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <LogoHeader size="large" />
+        
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">APLIKASI E-VOTING</h1>
+          <h2 className="text-xl font-bold text-green-700 mt-1">SMP NU AL FATTAH</h2>
+          <div className="inline-block bg-green-100 text-green-800 px-4 py-1 rounded-full text-sm font-semibold mt-3 border border-green-200">
+            PERIODE TAHUN {settings.period}
+          </div>
         </div>
-        {/* Second Row: OSIS, IPNU, IPPNU - Exactly Half Size */}
-        <div className="flex gap-6 sm:gap-10 mt-2 justify-center items-center">
-          <img
-            src="https://lh3.googleusercontent.com/d/1iAZFiX1Os0dY9lPzMbEztcEFSDvXCpsd=w500"
-            alt="Logo OSIS"
-            referrerPolicy="no-referrer"
-            className="h-16 sm:h-20 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
-          />
-          <img
-            src="https://lh3.googleusercontent.com/d/1vjZQlTHqwrnadx-1CJ4lbGzO3CdR0U2E=w500"
-            alt="Logo IPNU"
-            referrerPolicy="no-referrer"
-            className="h-16 sm:h-20 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
-          />
-          <img
-            src="https://lh3.googleusercontent.com/d/1HeuwQDNo6G2xwrwzRoP6pHnf1m_j5pne=w500"
-            alt="Logo IPPNU"
-            referrerPolicy="no-referrer"
-            className="h-16 sm:h-20 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
-          />
+
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          {!isAdminLogin ? (
+            <div className="p-8">
+              <form onSubmit={handleVoterLogin} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1 text-center">ID Pemilih</label>
+                  <input type="text" value={voterId} onChange={(e) => setVoterId(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-center font-mono text-lg bg-gray-50" placeholder="Masukkan ID unik Anda" required />
+                  <p className="text-xs text-center text-gray-500 mt-2">*Pastikan ID benar. Satu ID hanya berlaku satu kali.</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1 text-center">Role / Jenis Pemilih</label>
+                    <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 bg-gray-50 outline-none text-center font-medium">
+                      <option value="siswa">Siswa</option>
+                      <option value="nonsiswa">Non-Siswa</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1 text-center">Jenis Kelamin</label>
+                    <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 bg-gray-50 outline-none text-center font-medium">
+                      <option value="L">Laki-laki</option>
+                      <option value="P">Perempuan</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors mt-4 shadow-md">
+                  <LogIn size={20} />
+                  MASUK PEMILIHAN
+                </button>
+              </form>
+              
+              <button onClick={() => setIsAdminLogin(true)} className="w-full mt-6 text-sm text-gray-500 hover:text-green-700 font-medium transition-colors">
+                Login sebagai Admin
+              </button>
+            </div>
+          ) : (
+            <div className="p-8 bg-gray-900 text-white">
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <ShieldAlert className="text-yellow-500" size={28} />
+                <h3 className="text-xl font-bold">Akses Admin</h3>
+              </div>
+              <form onSubmit={handleAdminLogin} className="space-y-4">
+                <div>
+                  <input type="password" value={adminPass} onChange={(e) => setAdminPass(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:ring-2 focus:ring-yellow-500 outline-none text-center" placeholder="Masukkan Password" autoFocus />
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setIsAdminLogin(false)} className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-bold transition-colors">Batal</button>
+                  <button type="submit" className="flex-1 px-4 py-3 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-sm font-bold text-gray-900 transition-colors">Login Admin</button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </div>
-
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
-          APLIKASI E-VOTING
-        </h1>
-        <h2 className="text-xl font-bold text-emerald-700 mb-1">
-          SMP NU AL FATTAH
-        </h2>
-        <p className="text-gray-500 font-medium bg-emerald-50 py-1 px-4 rounded-full inline-block">
-          PERIODE TAHUN {settings.startYear} - {settings.endYear}
-        </p>
-      </div>
-
-      <Card className="w-full p-6 sm:p-8">
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              ID Pemilih
-            </label>
-            <input
-              type="text"
-              required
-              value={voterId}
-              onChange={(e) => setVoterId(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-              placeholder="Masukkan ID unik Anda"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              *Pastikan ID Anda benar. Satu ID hanya berlaku satu kali.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Role / Jenis Pemilih
-              </label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none"
-              >
-                <option value="Siswa">Siswa</option>
-                <option value="Non-Siswa">Non-Siswa</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Jenis Kelamin
-              </label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none"
-              >
-                <option value="Laki-laki">Laki-laki</option>
-                <option value="Perempuan">Perempuan</option>
-              </select>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isChecking}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isChecking ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>{' '}
-                Memverifikasi...
-              </>
-            ) : (
-              <>
-                <LogIn size={20} /> MASUK
-              </>
-            )}
-          </button>
-        </form>
-      </Card>
-
-      <button
-        onClick={onGoAdmin}
-        className="mt-8 text-sm text-gray-400 hover:text-emerald-600 transition-colors flex items-center gap-1"
-      >
-        <Settings size={14} /> Login Admin
-      </button>
     </div>
   );
 }
 
-// --- 2. Voting View ---
-function VotingView({
-  voter,
-  candidates,
-  onVoteComplete,
-  onCancel,
-  showToast,
-}) {
+// === VOTING VIEW ===
+function VotingView({ voter, candidates, onVoteComplete, onCancel, showToast }) {
   const [selectedOsis, setSelectedOsis] = useState(null);
   const [selectedIpnu, setSelectedIpnu] = useState(null);
   const [selectedIppnu, setSelectedIppnu] = useState(null);
-  const [isVoting, setIsVoting] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  
+  const [confirmModal, setConfirmModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filter candidates
-  const osisCandidates = candidates.filter((c) => c.category === 'OSIS');
-  const ipnuCandidates = candidates.filter((c) => c.category === 'IPNU');
-  const ippnuCandidates = candidates.filter((c) => c.category === 'IPPNU');
+  const osisCands = candidates.filter(c => c.role === 'OSIS');
+  const ipnuCands = candidates.filter(c => c.role === 'IPNU');
+  const ippnuCands = candidates.filter(c => c.role === 'IPPNU');
 
-  const needsIpnu = voter.gender === 'Laki-laki';
-  const needsIppnu = voter.gender === 'Perempuan';
+  const canSubmit = selectedOsis && (voter.gender === 'L' ? selectedIpnu : selectedIppnu);
 
-  const isReadyToVote =
-    selectedOsis &&
-    ((needsIpnu && selectedIpnu) || (needsIppnu && selectedIppnu));
-
-  const handleVoteSubmit = async () => {
-    setIsVoting(true);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
     try {
-      const voteWeight = voter.role === 'Siswa' ? 1 : 3;
-
-      // Prepare updates using Batch to ensure all succeed or all fail atomically
       const batch = writeBatch(db);
-
-      // 1. Mark voter as voted
-      const voterRef = doc(db, 'votedIds', voter.id);
-      batch.set(voterRef, {
+      
+      batch.set(doc(db, "voters", voter.id), {
         votedAt: new Date().toISOString(),
         role: voter.role,
-        gender: voter.gender,
+        gender: voter.gender
       });
 
-      // 2. Increment votes for selected candidates
-      const selectedIds = [selectedOsis];
-      if (needsIpnu) selectedIds.push(selectedIpnu);
-      if (needsIppnu) selectedIds.push(selectedIppnu);
+      const osisRef = doc(db, "candidates", selectedOsis.id);
+      batch.update(osisRef, { votes: increment(voter.weight) });
 
-      for (const candId of selectedIds) {
-        if (!candId) continue;
-        const candRef = doc(db, 'candidates', candId);
-        batch.update(candRef, {
-          votes: increment(voteWeight),
-        });
+      if (voter.gender === 'L' && selectedIpnu) {
+        const ipnuRef = doc(db, "candidates", selectedIpnu.id);
+        batch.update(ipnuRef, { votes: increment(voter.weight) });
+      } else if (voter.gender === 'P' && selectedIppnu) {
+        const ippnuRef = doc(db, "candidates", selectedIppnu.id);
+        batch.update(ippnuRef, { votes: increment(voter.weight) });
       }
 
-      // Execute transaction
       await batch.commit();
-
-      showToast('Suara berhasil terkirim! Terima kasih.', 'success');
+      
+      showToast("Suara Anda berhasil dikirim! Terima kasih.", "success");
       onVoteComplete();
     } catch (err) {
-      console.error('Gagal mengirim suara:', err);
-      showToast('Terjadi kesalahan saat mengirim suara. Coba lagi.', 'error');
+      showToast("Gagal mengirim suara. Periksa koneksi internet.", "error");
+      setIsSubmitting(false);
+      setConfirmModal(false);
     }
-    setIsVoting(false);
-    setShowConfirmModal(false);
   };
 
-  const CandidateCard = ({ candidate, isSelected, onSelect }) => (
-    <div
-      onClick={onSelect}
-      className={`relative cursor-pointer transition-all duration-200 rounded-xl border-2 overflow-hidden bg-white shadow-sm hover:shadow-md
-        ${
-          isSelected
-            ? 'border-emerald-500 ring-4 ring-emerald-100 scale-[1.02]'
-            : 'border-gray-200 hover:border-emerald-300'
-        }`}
-    >
-      {isSelected && (
-        <div className="absolute top-3 right-3 bg-emerald-500 text-white p-1 rounded-full z-10 shadow-sm animate-in zoom-in">
-          <CheckCircle2 size={20} />
-        </div>
-      )}
-      <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden relative group">
-        {candidate.photoUrl ? (
-          <img
-            src={candidate.photoUrl}
-            alt={candidate.name}
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <User size={48} className="text-gray-300" />
-        )}
-      </div>
-      <div className="p-4 text-center">
-        <h3 className="font-bold text-lg text-gray-800 line-clamp-2">
-          {candidate.name}
-        </h3>
-
-        <div className="mt-4 text-left text-sm space-y-2 border-t pt-3">
-          <div>
-            <span className="font-semibold text-emerald-700 block mb-1">
-              Visi:
-            </span>
-            <p className="text-gray-600 text-xs line-clamp-3 italic">
-              "{candidate.vision}"
-            </p>
-          </div>
-          <div>
-            <span className="font-semibold text-emerald-700 block mb-1">
-              Misi:
-            </span>
-            <p className="text-gray-600 text-xs line-clamp-3">
-              {candidate.mission}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className={`py-3 text-center font-bold text-sm transition-colors ${
-          isSelected
-            ? 'bg-emerald-500 text-white'
-            : 'bg-gray-50 text-gray-500 group-hover:bg-emerald-50'
-        }`}
-      >
-        {isSelected ? 'TERPILIH' : 'PILIH KANDIDAT INI'}
-      </div>
-    </div>
-  );
-
   return (
-    <div className="max-w-5xl mx-auto pt-6 p-4 pb-24">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div>
-          <p className="text-sm text-gray-500">
-            ID Pemilih:{' '}
-            <span className="font-bold text-gray-800">{voter.id}</span>
-          </p>
-          <p className="text-sm text-gray-500">
-            Hak Suara:{' '}
-            <span className="font-bold text-emerald-600">
-              {voter.role} (Bobot: {voter.role === 'Siswa' ? '1' : '3'})
-            </span>
-          </p>
-        </div>
-        <button
-          onClick={onCancel}
-          className="text-sm text-red-500 hover:text-red-700 font-medium flex items-center gap-1 border border-red-100 bg-red-50 px-3 py-1.5 rounded-lg"
-        >
-          <X size={16} /> Batal & Keluar
-        </button>
-      </div>
-
-      <div className="space-y-12">
-        {/* OSIS Section */}
-        <section>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">
-              Calon Ketua & Wakil Ketua OSIS
-            </h2>
-            <div className="w-16 h-1 bg-emerald-500 mx-auto mt-2 rounded-full"></div>
+    <div className="min-h-screen bg-gray-100 pb-20">
+      <div className="bg-white shadow-sm sticky top-0 z-40">
+        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 font-bold text-gray-800">
+            <User size={20} className="text-green-600" />
+            {voter.id} <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Bobot: {voter.weight}</span>
           </div>
-          {osisCandidates.length === 0 ? (
-            <p className="text-center text-gray-400 py-8">
-              Belum ada kandidat OSIS yang terdaftar.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {osisCandidates.map((c) => (
-                <CandidateCard
-                  key={c.id}
-                  candidate={c}
-                  isSelected={selectedOsis === c.id}
-                  onSelect={() => setSelectedOsis(c.id)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* IPNU Section (Laki-laki only) */}
-        {needsIpnu && (
-          <section>
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Calon Ketua IPNU
-              </h2>
-              <div className="w-16 h-1 bg-yellow-500 mx-auto mt-2 rounded-full"></div>
-            </div>
-            {ipnuCandidates.length === 0 ? (
-              <p className="text-center text-gray-400 py-8">
-                Belum ada kandidat IPNU yang terdaftar.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {ipnuCandidates.map((c) => (
-                  <CandidateCard
-                    key={c.id}
-                    candidate={c}
-                    isSelected={selectedIpnu === c.id}
-                    onSelect={() => setSelectedIpnu(c.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* IPPNU Section (Perempuan only) */}
-        {needsIppnu && (
-          <section>
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Calon Ketua IPPNU
-              </h2>
-              <div className="w-16 h-1 bg-green-500 mx-auto mt-2 rounded-full"></div>
-            </div>
-            {ippnuCandidates.length === 0 ? (
-              <p className="text-center text-gray-400 py-8">
-                Belum ada kandidat IPPNU yang terdaftar.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {ippnuCandidates.map((c) => (
-                  <CandidateCard
-                    key={c.id}
-                    candidate={c}
-                    isSelected={selectedIppnu === c.id}
-                    onSelect={() => setSelectedIppnu(c.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-      </div>
-
-      {/* Floating VOTE Button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex justify-center z-40">
-        <div className="max-w-2xl w-full flex items-center justify-between gap-4">
-          <p className="text-sm text-gray-500 hidden sm:block">
-            Pastikan Anda telah memilih kandidat di semua kategori yang
-            tersedia.
-          </p>
-          <button
-            onClick={() =>
-              isReadyToVote
-                ? setShowConfirmModal(true)
-                : showToast(
-                    'Pilih kandidat di setiap kategori terlebih dahulu.',
-                    'error'
-                  )
-            }
-            className={`w-full sm:w-auto px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2
-              ${
-                isReadyToVote
-                  ? 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-200'
-                  : 'bg-gray-400 cursor-not-allowed'
-              }`}
-          >
-            <CheckCircle2 size={20} />
-            KIRIM SUARA (VOTE)
+          <button onClick={onCancel} className="text-red-500 hover:bg-red-50 p-2 rounded-lg flex items-center gap-1 text-sm font-medium transition-colors">
+            <LogOut size={16} /> Batal & Keluar
           </button>
         </div>
       </div>
 
-      {/* Confirmation Modal */}
-      <Modal
-        isOpen={showConfirmModal}
-        onClose={() => !isVoting && setShowConfirmModal(false)}
-        title="Konfirmasi Pilihan"
-        actions={
-          <>
-            <button
-              disabled={isVoting}
-              onClick={() => setShowConfirmModal(false)}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
-            >
-              Batal
-            </button>
-            <button
-              disabled={isVoting}
-              onClick={handleVoteSubmit}
-              className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold shadow-sm hover:bg-emerald-700 disabled:opacity-70 flex items-center justify-center gap-2 min-w-[140px]"
-            >
-              {isVoting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>{' '}
-                  Mengirim...
-                </>
-              ) : (
-                'Ya, Kirim Suara'
-              )}
-            </button>
-          </>
-        }
-      >
-        <p className="text-gray-600 mb-4">
-          Apakah Anda yakin dengan pilihan Anda? Pilihan{' '}
-          <strong className="text-red-500">tidak dapat diubah</strong> setelah
-          suara dikirim.
-        </p>
-        <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-2 border border-gray-200">
-          <p className="flex justify-between">
-            <span className="font-semibold text-gray-500">OSIS:</span>{' '}
-            <span className="font-bold text-gray-800">
-              {osisCandidates.find((c) => c.id === selectedOsis)?.name}
-            </span>
+      <div className="max-w-4xl mx-auto px-4 pt-8">
+        <LogoHeader size="small" />
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-black text-gray-900">SURAT SUARA DIGITAL</h2>
+          <p className="text-gray-600">Pilih kandidat terbaik menurut Anda</p>
+        </div>
+
+        <CandidateSection title="KANDIDAT KETUA & WAKIL KETUA OSIS" cands={osisCands} selected={selectedOsis} onSelect={setSelectedOsis} />
+        
+        {voter.gender === 'L' ? (
+          <CandidateSection title="KANDIDAT KETUA IPNU" cands={ipnuCands} selected={selectedIpnu} onSelect={setSelectedIpnu} />
+        ) : (
+          <CandidateSection title="KANDIDAT KETUA IPPNU" cands={ippnuCands} selected={selectedIppnu} onSelect={setSelectedIppnu} />
+        )}
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.1)] z-40">
+        <div className="max-w-4xl mx-auto flex justify-between items-center gap-4">
+          <p className="text-sm text-gray-500 hidden sm:block">
+            {canSubmit ? "Pilihan sudah lengkap. Silakan kirim suara Anda." : "Harap pilih semua kandidat yang diwajibkan."}
           </p>
-          {needsIpnu && (
-            <p className="flex justify-between">
-              <span className="font-semibold text-gray-500">IPNU:</span>{' '}
-              <span className="font-bold text-gray-800">
-                {ipnuCandidates.find((c) => c.id === selectedIpnu)?.name}
-              </span>
-            </p>
-          )}
-          {needsIppnu && (
-            <p className="flex justify-between">
-              <span className="font-semibold text-gray-500">IPPNU:</span>{' '}
-              <span className="font-bold text-gray-800">
-                {ippnuCandidates.find((c) => c.id === selectedIppnu)?.name}
-              </span>
-            </p>
-          )}
+          <button 
+            disabled={!canSubmit} 
+            onClick={() => setConfirmModal(true)} 
+            className={`flex-1 sm:flex-none py-3 px-8 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${canSubmit ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:-translate-y-1' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+          >
+            <CheckCircle2 size={24} />
+            KIRIM SUARA
+          </button>
+        </div>
+      </div>
+
+      <Modal isOpen={confirmModal} onClose={() => !isSubmitting && setConfirmModal(false)} title="Konfirmasi Pilihan" actions={
+        <>
+          <button onClick={() => setConfirmModal(false)} disabled={isSubmitting} className="px-5 py-2.5 rounded-lg font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200">Batal</button>
+          <button onClick={handleSubmit} disabled={isSubmitting} className="px-5 py-2.5 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 flex items-center gap-2">
+            {isSubmitting ? <RefreshCw className="animate-spin" size={18} /> : <CheckCircle2 size={18} />}
+            {isSubmitting ? "Mengirim..." : "Ya, Kirim Sekarang"}
+          </button>
+        </>
+      }>
+        <p className="mb-4">Apakah Anda yakin dengan pilihan Anda? Suara yang telah dikirim tidak dapat diubah kembali.</p>
+        <div className="bg-gray-50 p-4 rounded-xl space-y-3 text-sm">
+          <div><span className="font-bold text-gray-700 block text-xs uppercase mb-1">Pilihan OSIS:</span> {selectedOsis?.name}</div>
+          {voter.gender === 'L' && <div><span className="font-bold text-gray-700 block text-xs uppercase mb-1">Pilihan IPNU:</span> {selectedIpnu?.name}</div>}
+          {voter.gender === 'P' && <div><span className="font-bold text-gray-700 block text-xs uppercase mb-1">Pilihan IPPNU:</span> {selectedIppnu?.name}</div>}
         </div>
       </Modal>
     </div>
   );
 }
 
-// --- 3. Admin Login View ---
-function AdminLoginView({ onSuccess, onCancel, showToast }) {
-  const [password, setPassword] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (password === 'alfattahvote') {
-      onSuccess();
-    } else {
-      showToast('Password salah!', 'error');
-      setPassword('');
-    }
-  };
-
+function CandidateSection({ title, cands, selected, onSelect }) {
+  if (!cands.length) return null;
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600">
-            <ShieldAlert size={32} />
+    <div className="mb-10">
+      <div className="flex items-center gap-4 mb-6">
+        <h3 className="text-lg font-bold bg-green-800 text-white py-2 px-4 rounded-r-xl border-l-4 border-yellow-400 shadow-sm inline-block -ml-4">{title}</h3>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {cands.map((c) => (
+          <div key={c.id} onClick={() => onSelect(c)} className={`relative bg-white rounded-2xl p-5 cursor-pointer transition-all border-2 overflow-hidden group ${selected?.id === c.id ? 'border-green-600 shadow-xl bg-green-50/30' : 'border-gray-200 hover:border-green-300'}`}>
+            {selected?.id === c.id && (
+              <div className="absolute top-3 right-3 bg-green-600 text-white p-1 rounded-full shadow-md z-10">
+                <CheckCircle2 size={24} />
+              </div>
+            )}
+            
+            <div className="aspect-[3/4] w-full mb-4 rounded-xl overflow-hidden bg-gray-100 relative shadow-inner">
+              <img src={c.photo || "https://via.placeholder.com/300"} alt={c.name} className={`w-full h-full object-cover transition-transform duration-500 ${selected?.id === c.id ? 'scale-105' : 'group-hover:scale-105'}`} />
+            </div>
+            
+            <div className="text-center">
+              <h4 className="text-lg font-black text-gray-900 mb-2 leading-tight">{c.name}</h4>
+              <div className="bg-gray-100 p-3 rounded-lg text-sm text-gray-600 italic h-24 overflow-y-auto text-left border shadow-inner">
+                "{c.vision}"
+              </div>
+            </div>
           </div>
-        </div>
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Login Admin Panel
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-              placeholder="Masukkan password admin"
-            />
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg transition-colors"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors"
-            >
-              Masuk
-            </button>
-          </div>
-        </form>
-      </Card>
+        ))}
+      </div>
     </div>
   );
 }
 
-// --- 4. Admin Dashboard ---
-function AdminDashboard({ settings, candidates, onLogout, showToast }) {
-  const [activeTab, setActiveTab] = useState('results'); // results, candidates, settings
-  const [showResetModal, setShowResetModal] = useState(false);
+// === ADMIN VIEW ===
+function AdminView({ settings, candidates, onLogout, showToast }) {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [periodInput, setPeriodInput] = useState(settings.period);
   const [isResetting, setIsResetting] = useState(false);
+  const [resetModal, setResetModal] = useState(false);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [formData, setFormData] = useState({ name: "", role: "OSIS", photo: "", vision: "", votes: 0 });
 
-  // New Candidate Form State
-  const [newCand, setNewCand] = useState({
-    category: 'OSIS',
-    name: '',
-    photoUrl: '',
-    vision: '',
-    mission: '',
-  });
-  const [isAdding, setIsAdding] = useState(false);
-  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
+  const totalOsis = candidates.filter(c => c.role === 'OSIS').reduce((sum, c) => sum + c.votes, 0);
 
-  const handleUpdateSettings = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const newStart = formData.get('startYear');
-    const newEnd = formData.get('endYear');
-
-    setIsUpdatingSettings(true);
+  const savePeriod = async () => {
     try {
-      await setDoc(doc(db, 'settings', 'main'), {
-        startYear: newStart,
-        endYear: newEnd,
-      });
-      showToast('Periode berhasil diperbarui!', 'success');
-    } catch (err) {
-      console.error(err);
-      showToast('Gagal memperbarui periode.', 'error');
+      await updateDoc(doc(db, "settings", "global"), { period: periodInput });
+      showToast("Periode diperbarui", "success");
+    } catch (e) {
+      showToast("Gagal menyimpan", "error");
     }
-    setIsUpdatingSettings(false);
   };
 
-  const handleAddCandidate = async (e) => {
-    e.preventDefault();
-    if (!newCand.name || !newCand.vision || !newCand.mission) {
-      showToast('Harap isi semua kolom wajib.', 'error');
-      return;
-    }
-    setIsAdding(true);
+  // LOGIK KOMPRESI GAMBAR & BASE64
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        
+        const MAX_WIDTH = 400; // Kompres ukuran max lebar
+        const MAX_HEIGHT = 400;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert ke base64 (75% quality JPEG)
+        const base64String = canvas.toDataURL('image/jpeg', 0.75);
+        setFormData(prev => ({ ...prev, photo: base64String }));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveCandidate = async () => {
+    if (!formData.name.trim()) return showToast("Nama wajib diisi", "error");
     try {
-      const newRef = doc(collection(db, 'candidates'));
-      await setDoc(newRef, {
-        ...newCand,
-        votes: 0,
-        createdAt: new Date().toISOString(),
-      });
-      setNewCand({
-        category: 'OSIS',
-        name: '',
-        photoUrl: '',
-        vision: '',
-        mission: '',
-      });
-      showToast('Kandidat berhasil ditambahkan.', 'success');
-    } catch (err) {
-      console.error(err);
-      showToast('Gagal menambahkan kandidat.', 'error');
+      if (editId) {
+        await updateDoc(doc(db, "candidates", editId), formData);
+        showToast("Kandidat diperbarui", "success");
+      } else {
+        await setDoc(doc(collection(db, "candidates")), formData);
+        showToast("Kandidat ditambah", "success");
+      }
+      setIsModalOpen(false);
+    } catch (e) {
+      showToast("Gagal menyimpan. Pastikan gambar tidak terlalu besar.", "error");
     }
-    setIsAdding(false);
   };
 
   const handleDeleteCandidate = async (id) => {
-    try {
-      await deleteDoc(doc(db, 'candidates', id));
-      showToast('Kandidat dihapus.', 'info');
-    } catch (err) {
-      console.error(err);
-      showToast('Gagal menghapus.', 'error');
+    if(window.confirm("Hapus kandidat ini?")) {
+      await deleteDoc(doc(db, "candidates", id));
+      showToast("Kandidat dihapus", "success");
     }
   };
 
   const handleResetData = async () => {
     setIsResetting(true);
     try {
-      // 1. Get all voters and delete them
-      const votersSnap = await getDocs(collection(db, 'votedIds'));
-
-      // We use batches for deleting to avoid spamming the DB, limits apply but fine for small schools
+      const votersSnap = await getDocs(collection(db, "voters"));
       let batch = writeBatch(db);
       let count = 0;
-
-      votersSnap.docs.forEach((d) => {
-        batch.delete(doc(db, 'votedIds', d.id));
+      votersSnap.forEach((docSnap) => {
+        batch.delete(docSnap.ref);
         count++;
-        // Commit every 400 to stay under firestore 500 limit if many users
-        if (count % 400 === 0) {
-          batch.commit();
-          batch = writeBatch(db);
-        }
+        if (count === 400) { batch.commit(); batch = writeBatch(db); count = 0; }
       });
       await batch.commit();
 
-      // 2. Reset all candidate votes to 0
-      batch = writeBatch(db);
-      candidates.forEach((c) => {
-        batch.update(doc(db, 'candidates', c.id), { votes: 0 });
+      const candsSnap = await getDocs(collection(db, "candidates"));
+      const batchCands = writeBatch(db);
+      candsSnap.forEach((docSnap) => {
+        batchCands.update(docSnap.ref, { votes: 0 });
       });
-      await batch.commit();
+      await batchCands.commit();
 
-      showToast(
-        'Data berhasil di-reset. Sistem siap untuk uji coba/periode baru.',
-        'success'
-      );
-      setShowResetModal(false);
-    } catch (err) {
-      console.error(err);
-      showToast('Gagal mereset data.', 'error');
+      showToast("Sistem direset!", "success");
+      setResetModal(false);
+    } catch (e) {
+      showToast("Gagal mereset", "error");
     }
     setIsResetting(false);
   };
 
-  const renderResults = () => {
-    const categories = ['OSIS', 'IPNU', 'IPPNU'];
-
-    return (
-      <div className="space-y-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-          <h3 className="text-xl font-bold text-gray-800">
-            Rekapitulasi Suara (Real-time)
-          </h3>
-          <button
-            onClick={() => setShowResetModal(true)}
-            className="flex items-center gap-2 text-sm text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-medium shadow-sm transition-colors"
-          >
-            <Trash2 size={16} /> Reset Data Pemilihan
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+      <div className="w-full md:w-64 bg-gray-900 text-gray-300 md:min-h-screen shrink-0 border-r border-gray-800">
+        <div className="p-6">
+          <div className="flex items-center gap-3 text-white font-bold text-xl mb-1">
+            <ShieldAlert className="text-yellow-500" /> ADMIN PANEL
+          </div>
+          <p className="text-xs text-gray-500">E-Voting Al Fattah</p>
+        </div>
+        <nav className="px-4 pb-4 space-y-1">
+          <button onClick={() => setActiveTab('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'bg-green-600 text-white' : 'hover:bg-gray-800'}`}>
+            <BarChart2 size={18} /> Dashboard Hasil
+          </button>
+          <button onClick={() => setActiveTab('candidates')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'candidates' ? 'bg-green-600 text-white' : 'hover:bg-gray-800'}`}>
+            <Users size={18} /> Kelola Kandidat
+          </button>
+          <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'settings' ? 'bg-green-600 text-white' : 'hover:bg-gray-800'}`}>
+            <Settings size={18} /> Pengaturan Sistem
+          </button>
+        </nav>
+        <div className="px-4 pt-8 md:mt-auto md:pb-8">
+          <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-gray-800 rounded-xl">
+            <LogOut size={18} /> Keluar Admin
           </button>
         </div>
-
-        {categories.map((cat) => {
-          const catCandidates = candidates
-            .filter((c) => c.category === cat)
-            .sort((a, b) => b.votes - a.votes);
-          const totalVotes = catCandidates.reduce(
-            (sum, c) => sum + (c.votes || 0),
-            0
-          );
-
-          return (
-            <Card key={cat} className="p-6">
-              <h4 className="font-bold text-lg mb-4 text-emerald-800 border-b pb-2">
-                Kategori: {cat} (Total: {totalVotes} Poin Suara)
-              </h4>
-              {catCandidates.length === 0 ? (
-                <p className="text-gray-400 italic text-sm">
-                  Tidak ada kandidat
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {catCandidates.map((c) => {
-                    const percentage =
-                      totalVotes === 0
-                        ? 0
-                        : Math.round((c.votes / totalVotes) * 100);
-                    return (
-                      <div key={c.id} className="mb-2">
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="font-semibold text-gray-700">
-                            {c.name}
-                          </span>
-                          <span className="font-bold text-emerald-600">
-                            {c.votes || 0} Poin ({percentage}%)
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div
-                            className="bg-emerald-500 h-2.5 rounded-full transition-all duration-1000"
-                            style={{ width: `${percentage}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </Card>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const renderManageCandidates = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-1">
-        <Card className="p-6 sticky top-24">
-          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-            <PlusCircle size={20} className="text-emerald-500" /> Tambah
-            Kandidat
-          </h3>
-          <form onSubmit={handleAddCandidate} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
-                Kategori
-              </label>
-              <select
-                value={newCand.category}
-                onChange={(e) =>
-                  setNewCand({ ...newCand, category: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-md text-sm focus:ring-1 focus:ring-emerald-500 outline-none"
-              >
-                <option value="OSIS">OSIS</option>
-                <option value="IPNU">IPNU</option>
-                <option value="IPPNU">IPPNU</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
-                Nama Lengkap
-              </label>
-              <input
-                type="text"
-                required
-                value={newCand.name}
-                onChange={(e) =>
-                  setNewCand({ ...newCand, name: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-md text-sm outline-none focus:border-emerald-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
-                URL Foto (Opsional)
-              </label>
-              <input
-                type="url"
-                placeholder="https://..."
-                value={newCand.photoUrl}
-                onChange={(e) =>
-                  setNewCand({ ...newCand, photoUrl: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-md text-sm outline-none focus:border-emerald-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
-                Visi
-              </label>
-              <textarea
-                required
-                rows={2}
-                value={newCand.vision}
-                onChange={(e) =>
-                  setNewCand({ ...newCand, vision: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-md text-sm outline-none focus:border-emerald-500"
-              ></textarea>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
-                Misi
-              </label>
-              <textarea
-                required
-                rows={3}
-                value={newCand.mission}
-                onChange={(e) =>
-                  setNewCand({ ...newCand, mission: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-md text-sm outline-none focus:border-emerald-500"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              disabled={isAdding}
-              className="w-full bg-emerald-600 text-white font-bold py-2 rounded-md hover:bg-emerald-700 text-sm flex justify-center items-center gap-2"
-            >
-              {isAdding ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>{' '}
-                  Menyimpan...
-                </>
-              ) : (
-                'Simpan Kandidat'
-              )}
-            </button>
-          </form>
-        </Card>
       </div>
 
-      <div className="lg:col-span-2 space-y-4">
-        <h3 className="font-bold text-lg mb-2">Daftar Kandidat Tersimpan</h3>
-        {candidates.length === 0 ? (
-          <div className="bg-white p-8 rounded-xl border text-center text-gray-500">
-            Belum ada kandidat terdaftar.
-          </div>
-        ) : (
-          candidates.map((c) => (
-            <Card
-              key={c.id}
-              className="p-4 flex gap-4 items-start hover:border-emerald-200 transition-colors"
-            >
-              <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
-                {c.photoUrl ? (
-                  <img
-                    src={c.photoUrl}
-                    referrerPolicy="no-referrer"
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-full h-full p-3 text-gray-300" />
-                )}
+      <div className="flex-1 p-6 lg:p-10 max-h-screen overflow-y-auto">
+        {activeTab === 'dashboard' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4">
+            <div className="flex justify-between items-end mb-8">
+              <div>
+                <h2 className="text-3xl font-black text-gray-900">Rekapitulasi Suara</h2>
+                <p className="text-gray-500">Hasil real-time</p>
               </div>
-              <div className="flex-grow">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                      {c.category}
-                    </span>
-                    <h4 className="font-bold text-gray-800 mt-1">{c.name}</h4>
+              <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-bold">Total Suara Masuk: {totalOsis}</div>
+            </div>
+
+            {['OSIS', 'IPNU', 'IPPNU'].map(role => {
+              const roleCands = candidates.filter(c => c.role === role).sort((a,b) => b.votes - a.votes);
+              if(!roleCands.length) return null;
+              const roleTotal = roleCands.reduce((sum, c) => sum + c.votes, 0);
+
+              return (
+                <div key={role} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6 border-b pb-4">{role}</h3>
+                  <div className="space-y-6">
+                    {roleCands.map(c => {
+                      const percentage = roleTotal > 0 ? ((c.votes / roleTotal) * 100).toFixed(1) : 0;
+                      return (
+                        <div key={c.id}>
+                          <div className="flex justify-between items-end mb-2">
+                            <div className="flex items-center gap-3">
+                              <img src={c.photo || "https://via.placeholder.com/40"} alt="" className="w-10 h-10 rounded-full object-cover border" />
+                              <span className="font-bold text-gray-800">{c.name}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-2xl font-black text-green-600">{c.votes}</span>
+                              <span className="text-sm text-gray-500 ml-1">suara ({percentage}%)</span>
+                            </div>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden shadow-inner">
+                            <div className="bg-green-500 h-4 rounded-full" style={{ width: `${percentage}%` }}></div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <button
-                    onClick={() => handleDeleteCandidate(c.id)}
-                    className="text-gray-400 hover:text-red-500 p-1.5 bg-gray-50 rounded hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
                 </div>
-                <div className="mt-2 text-xs text-gray-600 space-y-1">
-                  <p>
-                    <span className="font-semibold">Visi:</span> {c.vision}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Misi:</span> {c.mission}
-                  </p>
-                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {activeTab === 'candidates' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-black text-gray-900">Kelola Kandidat</h2>
               </div>
-            </Card>
-          ))
+              <button onClick={() => { setEditId(null); setFormData({ name: "", role: "OSIS", photo: "", vision: "", votes: 0 }); setIsModalOpen(true); }} className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+                <PlusCircle size={18} /> Tambah Kandidat
+              </button>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b text-gray-500 text-sm">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Kandidat</th>
+                    <th className="px-6 py-4 font-semibold">Organisasi</th>
+                    <th className="px-6 py-4 font-semibold text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {candidates.map(c => (
+                    <tr key={c.id} className="hover:bg-gray-50/50">
+                      <td className="px-6 py-4 flex items-center gap-4">
+                        <img src={c.photo || "https://via.placeholder.com/50"} className="w-14 h-14 rounded-xl object-cover border" alt="" />
+                        <div className="font-bold text-gray-900">{c.name}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${c.role==='OSIS'?'bg-blue-100 text-blue-700': c.role==='IPNU'?'bg-green-100 text-green-700':'bg-yellow-100 text-yellow-700'}`}>
+                          {c.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => { setEditId(c.id); setFormData(c); setIsModalOpen(true); }} className="text-gray-400 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 p-2 rounded-lg font-medium text-sm">Edit</button>
+                          <button onClick={() => handleDeleteCandidate(c.id)} className="text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 p-2 rounded-lg">
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {!candidates.length && <tr><td colSpan="3" className="px-6 py-12 text-center text-gray-500">Belum ada kandidat terdaftar.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 max-w-2xl">
+            <h2 className="text-3xl font-black text-gray-900 mb-2">Pengaturan Sistem</h2>
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 mb-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Settings size={20} className="text-gray-400"/> Periode Pemilihan</h3>
+              <div className="flex gap-3">
+                <input type="text" value={periodInput} onChange={e => setPeriodInput(e.target.value)} className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" />
+                <button onClick={savePeriod} className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-bold">Simpan</button>
+              </div>
+            </div>
+
+            <div className="bg-red-50 p-6 md:p-8 rounded-2xl border border-red-100">
+              <h3 className="text-lg font-bold text-red-700 mb-2 flex items-center gap-2"><AlertCircle size={20}/> Zona Bahaya (Reset Sistem)</h3>
+              <p className="text-red-600/80 mb-6 text-sm">Mengosongkan seluruh ID pemilih yang terekam dan mereset suara kandidat menjadi 0.</p>
+              <button onClick={() => setResetModal(true)} className="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2">
+                <Trash2 size={18} /> Reset Seluruh Data Pemilihan
+              </button>
+            </div>
+          </div>
         )}
       </div>
-    </div>
-  );
 
-  const renderSettings = () => (
-    <Card className="p-6 max-w-lg">
-      <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-        <Settings size={20} className="text-emerald-500" /> Pengaturan Periode
-      </h3>
-      <form onSubmit={handleUpdateSettings} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      {/* MODAL KANDIDAT */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Edit Kandidat" : "Tambah Kandidat"} actions={
+        <>
+          <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg font-medium text-gray-600 bg-gray-100 hover:bg-gray-200">Batal</button>
+          <button onClick={handleSaveCandidate} className="px-4 py-2 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700">Simpan</button>
+        </>
+      }>
+        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Tahun Mulai
-            </label>
-            <input
-              type="number"
-              required
-              name="startYear"
-              defaultValue={settings?.startYear || new Date().getFullYear()}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Nama Pasangan / Calon</label>
+            <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Tahun Selesai
-            </label>
-            <input
-              type="number"
-              required
-              name="endYear"
-              defaultValue={settings?.endYear || new Date().getFullYear() + 1}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Organisasi</label>
+            <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none">
+              <option value="OSIS">OSIS</option>
+              <option value="IPNU">IPNU</option>
+              <option value="IPPNU">IPPNU</option>
+            </select>
           </div>
-        </div>
-        <button
-          type="submit"
-          disabled={isUpdatingSettings}
-          className="bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg shadow-sm hover:bg-emerald-700 flex items-center justify-center gap-2 disabled:opacity-70"
-        >
-          {isUpdatingSettings ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>{' '}
-              Menyimpan...
-            </>
-          ) : (
-            'Simpan Pengaturan'
-          )}
-        </button>
-      </form>
-    </Card>
-  );
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Admin Header */}
-      <header className="bg-white border-b sticky top-0 z-30 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-gray-800">
-            <div className="bg-emerald-600 text-white p-1.5 rounded-md">
-              <ShieldAlert size={18} />
-            </div>
-            Admin Panel E-Voting
-          </div>
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-600 font-medium bg-gray-100 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            <LogOut size={16} /> Keluar
-          </button>
-        </div>
-      </header>
-
-      {/* Admin Content */}
-      <main className="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
-        {/* Navigation Tabs */}
-        <div className="flex space-x-2 mb-8 bg-white p-1.5 rounded-xl shadow-sm border border-gray-100 w-fit overflow-x-auto max-w-full">
-          <button
-            onClick={() => setActiveTab('results')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all whitespace-nowrap ${
-              activeTab === 'results'
-                ? 'bg-emerald-50 text-emerald-700 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <BarChart2 size={16} /> Rekap Suara
-          </button>
-          <button
-            onClick={() => setActiveTab('candidates')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all whitespace-nowrap ${
-              activeTab === 'candidates'
-                ? 'bg-emerald-50 text-emerald-700 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Users size={16} /> Kelola Kandidat
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all whitespace-nowrap ${
-              activeTab === 'settings'
-                ? 'bg-emerald-50 text-emerald-700 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Settings size={16} /> Pengaturan
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-          {activeTab === 'results' && renderResults()}
-          {activeTab === 'candidates' && renderManageCandidates()}
-          {activeTab === 'settings' && renderSettings()}
-        </div>
-      </main>
-
-      {/* Reset Confirmation Modal */}
-      <Modal
-        isOpen={showResetModal}
-        onClose={() => !isResetting && setShowResetModal(false)}
-        title={
-          <>
-            <AlertCircle className="text-red-500" size={20} /> Peringatan Bahaya
-          </>
-        }
-        actions={
-          <>
-            <button
-              disabled={isResetting}
-              onClick={() => setShowResetModal(false)}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
-            >
-              Batal
-            </button>
-            <button
-              disabled={isResetting}
-              onClick={handleResetData}
-              className="px-6 py-2 bg-red-600 text-white rounded-lg font-bold shadow-sm hover:bg-red-700 disabled:opacity-70 flex items-center gap-2 min-w-[150px] justify-center"
-            >
-              {isResetting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>{' '}
-                  Mereset...
-                </>
+          
+          {/* UPLOAD FOTO */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Foto Kandidat</label>
+            <div className="flex flex-col gap-3">
+              {formData.photo ? (
+                <div className="relative w-32 h-40 bg-gray-100 rounded-lg overflow-hidden border">
+                  <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                  <button onClick={() => setFormData({...formData, photo: ""})} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               ) : (
-                'Ya, Reset Semua'
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-500 font-semibold">Klik untuk Upload Foto</p>
+                  </div>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                </label>
               )}
-            </button>
-          </>
-        }
-      >
-        <p className="text-gray-700 font-medium mb-2">
-          Anda yakin ingin mereset SEMUA data?
-        </p>
-        <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1 mb-4">
-          <li>
-            Semua ID Pemilih yang sudah terekam akan <strong>dihapus</strong>{' '}
-            secara permanen.
-          </li>
-          <li>
-            Perolehan suara semua kandidat akan dikembalikan menjadi{' '}
-            <strong>0</strong>.
-          </li>
-        </ul>
-        <p className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-100 font-medium">
-          Tindakan ini tidak dapat dibatalkan. Hanya gunakan ini untuk uji coba
-          atau saat memulai periode pemilihan baru.
-        </p>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Foto akan dikompres otomatis agar aman di database.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Visi & Misi</label>
+            <textarea value={formData.vision} onChange={e => setFormData({...formData, vision: e.target.value})} className="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none min-h-[100px]"></textarea>
+          </div>
+        </div>
+      </Modal>
+
+      {/* MODAL RESET */}
+      <Modal isOpen={resetModal} onClose={() => !isResetting && setResetModal(false)} title="Konfirmasi Reset" actions={
+        <>
+          <button onClick={() => setResetModal(false)} disabled={isResetting} className="px-4 py-2 rounded-lg font-medium text-gray-600 bg-gray-100 hover:bg-gray-200">Batal</button>
+          <button onClick={handleResetData} disabled={isResetting} className="px-4 py-2 rounded-lg font-bold text-white bg-red-600 hover:bg-red-700 flex items-center gap-2">
+            {isResetting ? <RefreshCw className="animate-spin" size={16} /> : <AlertCircle size={16} />}
+            {isResetting ? "Mereset..." : "Ya, Reset"}
+          </button>
+        </>
+      }>
+        <p className="text-gray-700 mb-4">Tindakan ini akan menghapus permanen ID pemilih dan mengembalikan suara menjadi 0.</p>
+        <p className="font-semibold text-red-600">Yakin ingin melanjutkan?</p>
       </Modal>
     </div>
   );
