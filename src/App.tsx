@@ -361,13 +361,13 @@ function HomeView({ onLogin, onGoAdmin, settings, showToast }) {
             className="h-16 sm:h-20 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
           />
           <img
-            src="https://lh3.googleusercontent.com/d/1vjZQlTHqwrnadx-1CJ4lbGzO3CdR0U2E=w500"
+            src="https://lh3.googleusercontent.com/d/1vjZQlTHqwrnadx-1CJ4lbGzO3CdR0U2E"
             alt="Logo IPNU"
             referrerPolicy="no-referrer"
             className="h-16 sm:h-20 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
           />
           <img
-            src="https://lh3.googleusercontent.com/d/1HeuwQDNo6G2xwrwzRoP6pHnf1m_j5pne=w500"
+            src="https://lh3.googleusercontent.com/d/1HeuwQDNo6G2xwrwzRoP6pHnf1m_j5pne"
             alt="Logo IPPNU"
             referrerPolicy="no-referrer"
             className="h-16 sm:h-20 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
