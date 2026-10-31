@@ -27,6 +27,7 @@ import {
   Home,
   AlertCircle,
   X,
+  Upload, // Untuk upload foto
 } from 'lucide-react';
 
 // --- 1. Firebase Initialization ---
@@ -862,6 +863,42 @@ function AdminDashboard({ settings, candidates, onLogout, showToast }) {
   const [showResetModal, setShowResetModal] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
+// --- FUNGSI KOMPRESI GAMBAR KE BASE64 ---
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        const MAX_WIDTH = 400; // Batas maksimal lebar gambar
+        const MAX_HEIGHT = 400; // Batas maksimal tinggi gambar
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Kompres kualitas ke JPEG 75% agar ukuran string kecil & aman di Firestore
+        const base64String = canvas.toDataURL('image/jpeg', 0.75);
+        setNewCand({ ...newCand, photoUrl: base64String });
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  
   // New Candidate Form State
   const [newCand, setNewCand] = useState({
     category: 'OSIS',
@@ -1082,19 +1119,44 @@ function AdminDashboard({ settings, candidates, onLogout, showToast }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
-                URL Foto (Opsional)
+            <label className="block text-xs font-semibold text-gray-600 mb-1">
+              Foto Kandidat
+            </label>
+            {newCand.photoUrl ? (
+              <div className="relative w-28 h-36 bg-gray-100 rounded-lg overflow-hidden border">
+                <img
+                  src={newCand.photoUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setNewCand({ ...newCand, photoUrl: '' })}
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex flex-col items-center justify-center pt-3 pb-4">
+                  <Upload className="w-6 h-6 mb-1 text-gray-400" />
+                  <p className="text-xs text-gray-500 font-semibold">
+                    Klik untuk Pilih Foto
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
               </label>
-              <input
-                type="url"
-                placeholder="https://..."
-                value={newCand.photoUrl}
-                onChange={(e) =>
-                  setNewCand({ ...newCand, photoUrl: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-md text-sm outline-none focus:border-emerald-500"
-              />
-            </div>
+            )}
+            <p className="text-[11px] text-gray-400 mt-1">
+              *Foto dikompres otomatis agar aman di database.
+            </p>
+          </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
                 Visi
