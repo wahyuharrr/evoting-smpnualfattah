@@ -312,6 +312,21 @@ function HomeView({ onLogin, onGoAdmin, settings, showToast }) {
   const [gender, setGender] = useState('Laki-laki');
   const [isChecking, setIsChecking] = useState(false);
 
+  // --- FUNGSI OTOMATISASI ROLE BERDASARKAN KODE ---
+  const handleIdChange = (e) => {
+    const val = e.target.value;
+    setVoterId(val);
+
+    // Cek huruf pertama dari ID yang diketik
+    const firstChar = val.trim().charAt(0).toUpperCase();
+    if (firstChar === 'A') {
+      setRole('Siswa');
+    } else if (firstChar === 'B') {
+      setRole('Non-Siswa');
+    }
+  };
+  // ---------------------------------------------
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!voterId.trim()) {
@@ -326,7 +341,7 @@ function HomeView({ onLogin, onGoAdmin, settings, showToast }) {
 
     if (!idPattern.test(voterId.trim())) {
       showToast(
-        'Format ID salah! Pastikan ID sesuai dengan yang ada pada kartu pemilih.',
+        'Format ID salah! Pastikan ID sesuai dengan yang ada pada kartu login.',
         'error'
       );
       return;
@@ -411,24 +426,24 @@ function HomeView({ onLogin, onGoAdmin, settings, showToast }) {
               type="text"
               required
               value={voterId}
-              onChange={(e) => setVoterId(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-              placeholder="Masukkan ID unik Anda"
+              onChange={handleIdChange} // <--- Ubah ke fungsi otomatis ini
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all uppercase"
+              placeholder="Masukkan ID Pemilih yang ada di kartu login."
             />
             <p className="text-xs text-gray-500 mt-1">
-              *Pastikan ID Anda benar. Satu ID hanya berlaku satu kali.
+              *Role akan terpilih otomatis berdasarkan ID Pemilih.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Role / Jenis Pemilih
+                Role / Jenis Pemilih (Otomatis)
               </label>
               <select
                 value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                disabled // <--- Dikunci agar tidak bisa diubah manual
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 text-gray-700 cursor-not-allowed outline-none"
               >
                 <option value="Siswa">Siswa</option>
                 <option value="Non-Siswa">Non-Siswa</option>
@@ -448,7 +463,7 @@ function HomeView({ onLogin, onGoAdmin, settings, showToast }) {
               </select>
             </div>
           </div>
-
+          
           <button
             type="submit"
             disabled={isChecking}
