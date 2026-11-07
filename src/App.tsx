@@ -326,7 +326,7 @@ function HomeView({ onLogin, onGoAdmin, settings, showToast }) {
 
     if (!idPattern.test(voterId.trim())) {
       showToast(
-        'Format ID salah! Gunakan format A-001 untuk Siswa atau B-001 untuk Non-Siswa.',
+        'Format ID salah! Pastikan ID sesuai dengan yang ada pada kartu pemilih.',
         'error'
       );
       return;
