@@ -319,6 +319,20 @@ function HomeView({ onLogin, onGoAdmin, settings, showToast }) {
       return;
     }
 
+    // --- VALIDASI FORMAT ID (BARU) ---
+    // Menerima format A-001 s.d. A-999 (Siswa) atau B-001 s.d. B-999 (Non-Siswa)
+    // Bersifat tidak case-sensitive (huruf a/b kecil tetap bisa)
+    const idPattern = /^[AB]-[0-9]{3}$/i;
+
+    if (!idPattern.test(voterId.trim())) {
+      showToast(
+        'Format ID salah! Gunakan format A-001 untuk Siswa atau B-001 untuk Non-Siswa.',
+        'error'
+      );
+      return;
+    }
+    // ----------------------------------
+
     setIsChecking(true);
     try {
       // Check if user has already voted by checking the votedIds collection
