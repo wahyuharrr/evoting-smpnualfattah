@@ -337,7 +337,7 @@ function HomeView({ onLogin, onGoAdmin, settings, showToast }) {
     // --- VALIDASI FORMAT ID (BARU) ---
     // Menerima format A-001 s.d. A-999 (Siswa) atau B-001 s.d. B-999 (Non-Siswa)
     // Bersifat tidak case-sensitive (huruf a/b kecil tetap bisa)
-    const idPattern = /^[AB]-[0-9]{3}$/i;
+    const idPattern = /^[AB]-[0-9]{4}$/i;
 
     if (!idPattern.test(voterId.trim())) {
       showToast(
