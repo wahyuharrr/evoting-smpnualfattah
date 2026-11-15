@@ -12,6 +12,8 @@ import {
   getDocs,
   increment,
   writeBatch,
+  query,      // <--- TAMBAHAN
+  orderBy,    // <--- TAMBAHAN
 } from 'firebase/firestore';
 import {
   Users,
@@ -207,9 +209,10 @@ export default function EVotingApp() {
         (error) => console.error('Settings listen error:', error)
       );
 
-      // Listen to Candidates
+      // KODE BARU (ditambah query & orderBy):
+      const q = query(collection(db, 'candidates'), orderBy('order', 'asc'));
       unsubCandidates = onSnapshot(
-        collection(db, 'candidates'),
+        q,
         (snapshot) => {
           if (!isMounted) return;
           const cands = [];
