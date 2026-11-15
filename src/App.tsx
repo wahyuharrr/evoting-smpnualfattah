@@ -606,9 +606,14 @@ function VotingView({
             <span className="font-semibold text-emerald-700 block mb-1">
               Misi:
             </span>
-            <p className="text-gray-600 text-xs line-clamp-3">
-              {candidate.mission}
-            </p>
+            <div className="mt-3">
+              <h4 className="font-semibold text-gray-800 text-sm mb-1">Misi:</h4>
+              <ol className="list-decimal list-inside space-y-1 text-gray-600 text-sm">
+                {candidate.mission && candidate.mission.split('\n').map((item, index) => (
+                  item.trim() && <li key={index}>{item.trim()}</li>
+                ))}
+              </ol>
+            </div>
           </div>
         </div>
       </div>
