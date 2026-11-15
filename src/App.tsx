@@ -143,7 +143,6 @@ export default function EVotingApp() {
         const defaultCandidates = [
           {
             category: 'OSIS',
-            number: 1,
             name: 'Paslon 1 OSIS',
             vision: 'Visi Paslon 1',
             mission: 'Misi Paslon 1',
@@ -152,7 +151,6 @@ export default function EVotingApp() {
           },
           {
             category: 'OSIS',
-            number: 2,
             name: 'Paslon 2 OSIS',
             vision: 'Visi Paslon 2',
             mission: 'Misi Paslon 2',
@@ -161,7 +159,6 @@ export default function EVotingApp() {
           },
           {
             category: 'IPNU',
-            number: 1,
             name: 'Kandidat IPNU 1',
             vision: 'Visi IPNU',
             mission: 'Misi IPNU',
@@ -170,7 +167,6 @@ export default function EVotingApp() {
           },
           {
             category: 'IPPNU',
-            number: 1,
             name: 'Kandidat IPPNU 1',
             vision: 'Visi IPPNU',
             mission: 'Misi IPPNU',
@@ -511,18 +507,10 @@ function VotingView({
   const [isVoting, setIsVoting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
- // Filter candidates & urutkan berdasarkan properti 'number' secara ascending (1, 2, 3...)
-  const osisCandidates = candidates
-    .filter((c) => c.category === 'OSIS')
-    .sort((a, b) => (a.number || 0) - (b.number || 0));
-
-  const ipnuCandidates = candidates
-    .filter((c) => c.category === 'IPNU')
-    .sort((a, b) => (a.number || 0) - (b.number || 0));
-
-  const ippnuCandidates = candidates
-    .filter((c) => c.category === 'IPPNU')
-    .sort((a, b) => (a.number || 0) - (b.number || 0));
+  // Filter candidates
+  const osisCandidates = candidates.filter((c) => c.category === 'OSIS');
+  const ipnuCandidates = candidates.filter((c) => c.category === 'IPNU');
+  const ippnuCandidates = candidates.filter((c) => c.category === 'IPPNU');
 
   const needsIpnu = voter.gender === 'Laki-laki';
   const needsIppnu = voter.gender === 'Perempuan';
@@ -948,7 +936,6 @@ function AdminDashboard({ settings, candidates, onLogout, showToast }) {
   // New Candidate Form State
   const [newCand, setNewCand] = useState({
     category: 'OSIS',
-    number: 1,
     name: '',
     photoUrl: '',
     vision: '',
@@ -1076,12 +1063,11 @@ function AdminDashboard({ settings, candidates, onLogout, showToast }) {
         {categories.map((cat) => {
           const catCandidates = candidates
             .filter((c) => c.category === cat)
-            .sort((a, b) => {
-    if (b.votes !== a.votes) {
-      return b.votes - a.votes; // Urutkan dari suara terbanyak
-    }
-    return (a.number || 0) - (b.number || 0); // Jika suara sama, urutkan berdasarkan nomor urut
-  });
+            .sort((a, b) => b.votes - a.votes);
+          const totalVotes = catCandidates.reduce(
+            (sum, c) => sum + (c.votes || 0),
+            0
+          );
 
           return (
             <Card key={cat} className="p-6">
@@ -1152,21 +1138,6 @@ function AdminDashboard({ settings, candidates, onLogout, showToast }) {
                 <option value="IPPNU">IPPNU</option>
               </select>
             </div>
-            <div>
-  <label className="block text-xs font-semibold text-gray-600 mb-1">
-    Nomor Urut (Contoh: 1, 2, 3)
-  </label>
-  <input
-    type="number"
-    required
-    min={1}
-    value={newCand.number}
-    onChange={(e) =>
-      setNewCand({ ...newCand, number: parseInt(e.target.value) || 1 })
-    }
-    className="w-full px-3 py-2 border rounded-md text-sm outline-none focus:border-emerald-500"
-  />
-</div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
                 Nama Lengkap
